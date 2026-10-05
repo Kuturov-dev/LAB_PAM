@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../models/workout_program.dart';
+import '../../../models/fitness_models.dart';
+import '../../../shared/widgets/svg_icon.dart';
 
 class WorkoutProgramsSection extends StatelessWidget {
-  final List<WorkoutProgram> programs;
-  final ValueChanged<WorkoutProgram> onProgramTap;
+  final List<WorkoutProgramItem> programs;
+  final ValueChanged<WorkoutProgramItem> onProgramTap;
+  final ValueChanged<String> onFavoriteToggle;
 
   const WorkoutProgramsSection({
     super.key,
     required this.programs,
     required this.onProgramTap,
+    required this.onFavoriteToggle,
   });
 
   @override
@@ -26,6 +29,7 @@ class WorkoutProgramsSection extends StatelessWidget {
           return _ProgramCard(
             program: program,
             onTap: () => onProgramTap(program),
+            onFavoriteToggle: () => onFavoriteToggle(program.id),
           );
         },
       ),
@@ -34,12 +38,14 @@ class WorkoutProgramsSection extends StatelessWidget {
 }
 
 class _ProgramCard extends StatelessWidget {
-  final WorkoutProgram program;
+  final WorkoutProgramItem program;
   final VoidCallback onTap;
+  final VoidCallback onFavoriteToggle;
 
   const _ProgramCard({
     required this.program,
     required this.onTap,
+    required this.onFavoriteToggle,
   });
 
   @override
@@ -53,7 +59,14 @@ class _ProgramCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(program.imagePath, fit: BoxFit.cover),
+            Image.network(
+              program.imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Image.asset(
+                'assets/images/yoga.jpg',
+                fit: BoxFit.cover,
+              ),
+            ),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -61,6 +74,25 @@ class _ProgramCard extends StatelessWidget {
                   end: Alignment.bottomCenter,
                   colors: [Colors.transparent, Color(0xD9000000)],
                   stops: [0.38, 1],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              left: 8,
+              child: GestureDetector(
+                onTap: onFavoriteToggle,
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: const BoxDecoration(
+                    color: Colors.black38,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    program.isFavorite ? Icons.favorite : Icons.favorite_border,
+                    size: 16,
+                    color: program.isFavorite ? const Color(0xFFED475B) : Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -74,11 +106,19 @@ class _ProgramCard extends StatelessWidget {
                     color: const Color(0xFFE7FFF1),
                     borderRadius: BorderRadius.circular(9),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.workspace_premium_outlined, size: 12, color: kGreen),
-                      SizedBox(width: 3),
-                      Text('Pro', style: TextStyle(color: kGreen, fontSize: 12)),
+                      if (program.proIconUrl != null)
+                        AppSvgIcon(
+                          url: program.proIconUrl!,
+                          size: 12,
+                          color: kGreen,
+                          fallbackIcon: Icons.workspace_premium_outlined,
+                        )
+                      else
+                        const Icon(Icons.workspace_premium_outlined, size: 12, color: kGreen),
+                      const SizedBox(width: 3),
+                      const Text('Pro', style: TextStyle(color: kGreen, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -92,25 +132,35 @@ class _ProgramCard extends StatelessWidget {
                 children: [
                   Text(
                     program.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
-                      height: 1.35,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 7),
                   Row(
                     children: [
-                      const Icon(Icons.local_fire_department_outlined,
-                          size: 11, color: Colors.white),
+                      AppSvgIcon(
+                        url: program.caloriesIconUrl,
+                        size: 11,
+                        color: Colors.white,
+                        fallbackIcon: Icons.local_fire_department_outlined,
+                      ),
                       const SizedBox(width: 2),
-                      Text(program.calories,
+                      Text('${program.calories} kcal',
                           style: const TextStyle(color: Colors.white, fontSize: 10)),
                       const Spacer(),
-                      const Icon(Icons.schedule, size: 11, color: Colors.white),
+                      AppSvgIcon(
+                        url: program.durationIconUrl,
+                        size: 11,
+                        color: Colors.white,
+                        fallbackIcon: Icons.schedule,
+                      ),
                       const SizedBox(width: 2),
-                      Text(program.duration,
+                      Text('${program.durationMinutes}m',
                           style: const TextStyle(color: Colors.white, fontSize: 10)),
                     ],
                   ),

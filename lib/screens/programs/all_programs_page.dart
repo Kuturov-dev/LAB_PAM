@@ -1,38 +1,71 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../bloc/fitness_cubit.dart';
+import '../../bloc/fitness_state.dart';
 import '../../core/constants/app_colors.dart';
-import '../../models/workout_program.dart';
+import '../../shared/widgets/state_widgets.dart';
+import '../../shared/widgets/svg_icon.dart';
 import '../details/gym_details_page.dart';
 
-class AllProgramsPage extends StatefulWidget {
+class AllProgramsPage extends StatelessWidget {
   const AllProgramsPage({super.key});
 
-  @override
-  State<AllProgramsPage> createState() => _AllProgramsPageState();
-}
-
-class _AllProgramsPageState extends State<AllProgramsPage> {
-  String _selectedCategory = 'All';
-  String _searchQuery = '';
-
-  final List<String> _categories = const [
-    'All',
-    'Yoga',
-    'Pilates',
-    'Cardio',
-    'Boxing',
-  ];
-
-  List<WorkoutProgram> get _filteredPrograms {
-    return WorkoutProgram.samplePrograms.where((p) {
-      final matchesCategory = (_selectedCategory == 'All') ||
-          (p.category.toLowerCase() == _selectedCategory.toLowerCase());
-      final matchesSearch = p.title.toLowerCase().contains(_searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    }).toList();
+  void _showSortDialog(BuildContext context) {
+    final cubit = context.read<FitnessCubit>();
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Sort Programs'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Default Order'),
+                onTap: () {
+                  cubit.setSortOption(SortOption.none);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                title: const Text('Duration: Low to High'),
+                onTap: () {
+                  cubit.setSortOption(SortOption.durationAsc);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                title: const Text('Duration: High to Low'),
+                onTap: () {
+                  cubit.setSortOption(SortOption.durationDesc);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                title: const Text('Calories: Low to High'),
+                onTap: () {
+                  cubit.setSortOption(SortOption.caloriesAsc);
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                title: const Text('Calories: High to Low'),
+                onTap: () {
+                  cubit.setSortOption(SortOption.caloriesDesc);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<FitnessCubit>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -42,178 +75,286 @@ class _AllProgramsPageState extends State<AllProgramsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: kInk),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: TextField(
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search programs...',
-                prefixIcon: const Icon(Icons.search, color: kGrey),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: kLine),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: kLine),
-                ),
-              ),
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sort),
+            tooltip: 'Sort Options',
+            onPressed: () => _showSortDialog(context),
           ),
-          SizedBox(
-            height: 38,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final cat = _categories[index];
-                final isSelected = cat == _selectedCategory;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = cat;
-                    });
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: isSelected ? kGreen : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: isSelected ? null : Border.all(color: kLine),
+        ],
+      ),
+      body: BlocBuilder<FitnessCubit, FitnessState>(
+        builder: (context, state) {
+          if (state is FitnessLoading || state is FitnessInitial) {
+            return const LoadingStateWidget();
+          }
+
+          if (state is FitnessError) {
+            return ErrorStateWidget(
+              errorMessage: state.errorMessage,
+              onRetry: () => cubit.loadData(),
+            );
+          }
+
+          final searchQuery = (state is FitnessSuccess) ? state.searchQuery : '';
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: TextField(
+                  controller: TextEditingController(text: searchQuery)
+                    ..selection = TextSelection.collapsed(offset: searchQuery.length),
+                  onChanged: (val) => cubit.updateSearchQuery(val),
+                  decoration: InputDecoration(
+                    hintText: 'Search workout programs...',
+                    prefixIcon: const Icon(Icons.search, color: kGrey),
+                    suffixIcon: searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, color: kGrey),
+                            onPressed: () => cubit.updateSearchQuery(''),
+                          )
+                        : null,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: kLine),
                     ),
-                    child: Text(
-                      cat,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : kGrey,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: kLine),
                     ),
                   ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _filteredPrograms.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No programs found.',
-                      style: TextStyle(color: kGrey, fontSize: 16),
-                    ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.85,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: _filteredPrograms.length,
+                ),
+              ),
+              if (state is FitnessSuccess) ...[
+                SizedBox(
+                  height: 38,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: state.data.filters.length,
                     itemBuilder: (context, index) {
-                      final program = _filteredPrograms[index];
+                      final filter = state.data.filters[index];
+                      final isSelected = filter.id == state.selectedFilterId;
                       return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const GymDetailsPage()),
-                          );
-                        },
+                        onTap: () => cubit.selectFilter(filter.id),
                         child: Container(
-                          clipBehavior: Clip.antiAlias,
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            color: isSelected ? kGreen : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: isSelected ? null : Border.all(color: kLine),
                           ),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.asset(program.imagePath, fit: BoxFit.cover),
-                              const DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [Colors.transparent, Color(0xD9000000)],
-                                    stops: [0.38, 1],
-                                  ),
-                                ),
-                              ),
-                              if (program.isPro)
-                                Positioned(
-                                  top: 10,
-                                  right: 10,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE7FFF1),
-                                      borderRadius: BorderRadius.circular(9),
-                                    ),
-                                    child: const Row(
-                                      children: [
-                                        Icon(Icons.workspace_premium_outlined, size: 12, color: kGreen),
-                                        SizedBox(width: 3),
-                                        Text('Pro', style: TextStyle(color: kGreen, fontSize: 12)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              Positioned(
-                                bottom: 12,
-                                left: 12,
-                                right: 12,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      program.title,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.local_fire_department_outlined,
-                                            size: 11, color: Colors.white),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          program.calories,
-                                          style: const TextStyle(color: Colors.white, fontSize: 10),
-                                        ),
-                                        const Spacer(),
-                                        const Icon(Icons.schedule, size: 11, color: Colors.white),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          program.duration,
-                                          style: const TextStyle(color: Colors.white, fontSize: 10),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            filter.name,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : kGrey,
+                              fontWeight:
+                                  isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
                           ),
                         ),
                       );
                     },
                   ),
-          ),
-        ],
+                ),
+                const SizedBox(height: 12),
+              ],
+              Expanded(
+                child: Builder(
+                  builder: (_) {
+                    if (state is FitnessEmpty) {
+                      return EmptyStateWidget(
+                        message: state.message,
+                        onResetTap: () {
+                          cubit.selectFilter('all');
+                          cubit.updateSearchQuery('');
+                        },
+                      );
+                    }
+
+                    if (state is FitnessSuccess) {
+                      final programs = state.filteredPrograms;
+                      if (programs.isEmpty) {
+                        return EmptyStateWidget(
+                          message: 'No programs matching current criteria.',
+                          onResetTap: () {
+                            cubit.selectFilter('all');
+                            cubit.updateSearchQuery('');
+                          },
+                        );
+                      }
+
+                      return GridView.builder(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.85,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemCount: programs.length,
+                        itemBuilder: (context, index) {
+                          final program = programs[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const GymDetailsPage()),
+                              );
+                            },
+                            child: Container(
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.network(
+                                    program.imageUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Image.asset(
+                                      'assets/images/yoga.jpg',
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.transparent,
+                                          Color(0xD9000000)
+                                        ],
+                                        stops: [0.38, 1],
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    left: 8,
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          cubit.toggleFavorite(program.id),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.black38,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          program.isFavorite
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          size: 18,
+                                          color: program.isFavorite
+                                              ? const Color(0xFFED475B)
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (program.isPro)
+                                    Positioned(
+                                      top: 10,
+                                      right: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE7FFF1),
+                                          borderRadius:
+                                              BorderRadius.circular(9),
+                                        ),
+                                        child: const Row(
+                                          children: [
+                                            Icon(
+                                                Icons
+                                                    .workspace_premium_outlined,
+                                                size: 12,
+                                                color: kGreen),
+                                            SizedBox(width: 3),
+                                            Text('Pro',
+                                                style: TextStyle(
+                                                    color: kGreen,
+                                                    fontSize: 12)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  Positioned(
+                                    bottom: 12,
+                                    left: 12,
+                                    right: 12,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          program.title,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            AppSvgIcon(
+                                              url: program.caloriesIconUrl,
+                                              size: 11,
+                                              color: Colors.white,
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              '${program.calories} kcal',
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10),
+                                            ),
+                                            const Spacer(),
+                                            AppSvgIcon(
+                                              url: program.durationIconUrl,
+                                              size: 11,
+                                              color: Colors.white,
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              '${program.durationMinutes}m',
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }
+
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

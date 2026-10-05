@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../models/workout_plan.dart';
+import '../../../models/fitness_models.dart';
+import '../../../shared/widgets/svg_icon.dart';
 
 class FeaturedPlansSection extends StatelessWidget {
-  final List<WorkoutPlan> plans;
-  final ValueChanged<WorkoutPlan> onPlanTap;
+  final List<FeaturedPlanItem> plans;
+  final ValueChanged<FeaturedPlanItem> onPlanTap;
 
   const FeaturedPlansSection({
     super.key,
@@ -34,7 +35,7 @@ class FeaturedPlansSection extends StatelessWidget {
 }
 
 class _FeaturedCard extends StatelessWidget {
-  final WorkoutPlan plan;
+  final FeaturedPlanItem plan;
   final VoidCallback onTap;
 
   const _FeaturedCard({
@@ -53,7 +54,15 @@ class _FeaturedCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(plan.imagePath, fit: BoxFit.cover, alignment: Alignment.center),
+            Image.network(
+              plan.imageUrl,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              errorBuilder: (_, __, ___) => Image.asset(
+                'assets/images/upper_body.jpg',
+                fit: BoxFit.cover,
+              ),
+            ),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -80,10 +89,27 @@ class _FeaturedCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.fitness_center, size: 13, color: Colors.white),
-                      const SizedBox(width: 5),
+                      AppSvgIcon(
+                        url: plan.durationIconUrl,
+                        size: 14,
+                        color: Colors.white,
+                        fallbackIcon: Icons.calendar_today,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        '${plan.duration}  •  ${plan.frequency}',
+                        plan.duration,
+                        style: const TextStyle(fontSize: 11, color: Colors.white),
+                      ),
+                      const SizedBox(width: 10),
+                      AppSvgIcon(
+                        url: plan.frequencyIconUrl,
+                        size: 14,
+                        color: Colors.white,
+                        fallbackIcon: Icons.fitness_center,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        plan.frequency,
                         style: const TextStyle(fontSize: 11, color: Colors.white),
                       ),
                     ],
@@ -97,9 +123,9 @@ class _FeaturedCard extends StatelessWidget {
                       color: kGreen,
                       borderRadius: BorderRadius.circular(7),
                     ),
-                    child: const Text(
-                      'Start Now',
-                      style: TextStyle(
+                    child: Text(
+                      plan.actionLabel,
+                      style: const TextStyle(
                         fontSize: 12,
                         color: Colors.white,
                         fontWeight: FontWeight.w700,

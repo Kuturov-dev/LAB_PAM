@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../models/gym_details.dart';
+import '../../../models/fitness_models.dart';
+import '../../../shared/widgets/svg_icon.dart';
 
 class AmenitiesGrid extends StatelessWidget {
-  final List<AmenityItem> amenities;
+  final List<GymAmenity> amenities;
 
   const AmenitiesGrid({
     super.key,
@@ -41,7 +42,7 @@ class AmenitiesGrid extends StatelessWidget {
 }
 
 class _AmenityTile extends StatelessWidget {
-  final AmenityItem item;
+  final GymAmenity item;
 
   const _AmenityTile({required this.item});
 
@@ -57,7 +58,12 @@ class _AmenityTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(item.icon, color: kGrey, size: 19),
+          AppSvgIcon(
+            url: item.iconUrl,
+            size: 20,
+            color: kGrey,
+            fallbackIcon: Icons.check_circle_outline,
+          ),
           const SizedBox(width: 10),
           Flexible(
             child: Text(

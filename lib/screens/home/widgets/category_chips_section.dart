@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../models/fitness_models.dart';
+import '../../../shared/widgets/svg_icon.dart';
 
 class CategoryChipsSection extends StatelessWidget {
-  final List<String> categories;
-  final String selectedCategory;
-  final ValueChanged<String> onCategorySelected;
+  final List<FilterItem> filters;
+  final String selectedFilterId;
+  final Map<String, String> filterIconUrls;
+  final ValueChanged<String> onFilterSelected;
 
   const CategoryChipsSection({
     super.key,
-    required this.categories,
-    required this.selectedCategory,
-    required this.onCategorySelected,
+    required this.filters,
+    required this.selectedFilterId,
+    required this.filterIconUrls,
+    required this.onFilterSelected,
   });
 
   @override
@@ -19,12 +23,14 @@ class CategoryChipsSection extends StatelessWidget {
       height: 34,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
+        itemCount: filters.length,
         itemBuilder: (context, index) {
-          final category = categories[index];
-          final isSelected = category == selectedCategory;
+          final filter = filters[index];
+          final isSelected = filter.id == selectedFilterId;
+          final iconUrl = filterIconUrls[filter.id] ?? '';
+
           return GestureDetector(
-            onTap: () => onCategorySelected(category),
+            onTap: () => onFilterSelected(filter.id),
             child: Container(
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -34,13 +40,25 @@ class CategoryChipsSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: isSelected ? null : Border.all(color: kLine),
               ),
-              child: Text(
-                category,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : kGrey,
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                ),
+              child: Row(
+                children: [
+                  if (iconUrl.isNotEmpty) ...[
+                    AppSvgIcon(
+                      url: iconUrl,
+                      size: 16,
+                      color: isSelected ? Colors.white : kGrey,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    filter.name,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : kGrey,
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
