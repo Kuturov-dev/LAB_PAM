@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/fitness_cubit.dart';
 import '../../bloc/fitness_state.dart';
 import '../../core/constants/app_colors.dart';
+import '../../shared/widgets/add_workout_dialog.dart';
+import '../../shared/widgets/live_tracking_sheet.dart';
 import '../../shared/widgets/state_widgets.dart';
 import '../details/gym_details_page.dart';
 import '../programs/all_programs_page.dart';
@@ -43,6 +45,43 @@ class HomePage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const AllProgramsPage()),
+    );
+  }
+
+  void _showLiveTracking(BuildContext context, int currentKm, int totalGoal) {
+    final cubit = context.read<FitnessCubit>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) {
+        return LiveTrackingSheet(
+          currentKm: currentKm,
+          totalGoalKm: totalGoal,
+          onProgressUpdated: (newKm) {
+            cubit.updateChallengeProgress(newKm);
+          },
+        );
+      },
+    );
+  }
+
+  void _showAddWorkoutDialog(BuildContext context) {
+    final cubit = context.read<FitnessCubit>();
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AddWorkoutDialog(
+          onWorkoutAdded: (newProgram) {
+            cubit.addWorkoutProgram(newProgram);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Added "${newProgram.title}" workout widget!')),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -92,7 +131,7 @@ class HomePage extends StatelessWidget {
                   child: Icon(Icons.directions_run, color: kGreen, size: 20),
                 ),
                 title: Text('Daily Challenge Progress'),
-                subtitle: Text('Keep going to hit your 20 km goal!'),
+                subtitle: Text('Start a live run session to complete your goal!'),
                 trailing: Text('1h ago', style: TextStyle(fontSize: 12, color: kGrey)),
               ),
             ],
@@ -112,6 +151,13 @@ class HomePage extends StatelessWidget {
         systemNavigationBarColor: Colors.white,
       ),
       child: Scaffold(
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _showAddWorkoutDialog(context),
+          backgroundColor: kGreen,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add),
+          label: const Text('Add Workout Widget', style: TextStyle(fontWeight: FontWeight.bold)),
+        ),
         body: SafeArea(
           child: BlocBuilder<FitnessCubit, FitnessState>(
             builder: (context, state) {
@@ -142,7 +188,7 @@ class HomePage extends StatelessWidget {
                 final filteredPrograms = state.filteredPrograms;
 
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 29, 0, 30),
+                  padding: const EdgeInsets.fromLTRB(24, 29, 0, 90),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -154,18 +200,11 @@ class HomePage extends StatelessWidget {
                       TodayChallengeCard(
                         completed: challenge.completed,
                         total: challenge.total,
-                        onTap: () {
-                          cubit.incrementChallenge();
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Logged 1 km! Progress: ${challenge.completed}/${challenge.total} km',
-                              ),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
-                        },
+                        onTap: () => _showLiveTracking(
+                          context,
+                          challenge.completed,
+                          challenge.total,
+                        ),
                       ),
                       const SizedBox(height: 27),
                       SectionHeader(
