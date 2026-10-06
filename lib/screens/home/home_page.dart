@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../bloc/fitness_cubit.dart';
 import '../../bloc/fitness_state.dart';
 import '../../core/constants/app_colors.dart';
-import '../../shared/widgets/add_workout_dialog.dart';
 import '../../shared/widgets/live_tracking_sheet.dart';
 import '../../shared/widgets/state_widgets.dart';
 import '../details/gym_details_page.dart';
@@ -62,23 +61,6 @@ class HomePage extends StatelessWidget {
           totalGoalKm: totalGoal,
           onProgressUpdated: (newKm) {
             cubit.updateChallengeProgress(newKm);
-          },
-        );
-      },
-    );
-  }
-
-  void _showAddWorkoutDialog(BuildContext context) {
-    final cubit = context.read<FitnessCubit>();
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AddWorkoutDialog(
-          onWorkoutAdded: (newProgram) {
-            cubit.addWorkoutProgram(newProgram);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Added "${newProgram.title}" workout widget!')),
-            );
           },
         );
       },
@@ -151,13 +133,6 @@ class HomePage extends StatelessWidget {
         systemNavigationBarColor: Colors.white,
       ),
       child: Scaffold(
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showAddWorkoutDialog(context),
-          backgroundColor: kGreen,
-          foregroundColor: Colors.white,
-          icon: const Icon(Icons.add),
-          label: const Text('Add Workout Widget', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
         body: SafeArea(
           child: BlocBuilder<FitnessCubit, FitnessState>(
             builder: (context, state) {
@@ -188,7 +163,7 @@ class HomePage extends StatelessWidget {
                 final filteredPrograms = state.filteredPrograms;
 
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 29, 0, 90),
+                  padding: const EdgeInsets.fromLTRB(24, 29, 0, 30),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

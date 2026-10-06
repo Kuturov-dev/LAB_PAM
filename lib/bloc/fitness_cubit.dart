@@ -12,7 +12,8 @@ class FitnessCubit extends Cubit<FitnessState> {
     emit(FitnessLoading());
     try {
       final data = await repository.loadFitnessData();
-      emit(FitnessSuccess(data: data));
+      final savedFavorites = await repository.loadFavoriteIds();
+      emit(FitnessSuccess(data: data, favoriteIds: savedFavorites));
     } catch (e) {
       emit(FitnessError('Failed to load fitness data: ${e.toString()}'));
     }
@@ -67,6 +68,7 @@ class FitnessCubit extends Cubit<FitnessState> {
       } else {
         newFavorites.add(programId);
       }
+      repository.saveFavoriteIds(newFavorites);
       emit(current.copyWith(favoriteIds: newFavorites));
     }
   }
@@ -90,6 +92,8 @@ class FitnessCubit extends Cubit<FitnessState> {
       final clampedCompleted = newCompleted.clamp(0, challenge.total);
       final newProgress = (clampedCompleted / challenge.total).clamp(0.0, 1.0);
 
+      repository.saveCompletedKm(clampedCompleted);
+
       final updatedChallenge = challenge.copyWith(
         completed: clampedCompleted,
         progress: newProgress,
@@ -106,31 +110,6 @@ class FitnessCubit extends Cubit<FitnessState> {
       );
 
       emit(current.copyWith(data: updatedData));
-    }
-  }
-
-  void addWorkoutProgram(WorkoutProgramItem newProgram) {
-    if (state is FitnessSuccess) {
-      final current = state as FitnessSuccess;
-      final updatedList = List<WorkoutProgramItem>.from(current.data.workoutPrograms)
-        ..add(newProgram);
-
-      final updatedData = FitnessAppData(
-        header: current.data.header,
-        todaysChallenge: current.data.todaysChallenge,
-        featuredPlans: current.data.featuredPlans,
-        filters: current.data.filters,
-        filterIconUrls: current.data.filterIconUrls,
-        workoutPrograms: updatedList,
-        gymDetails: current.data.gymDetails,
-      );
-
-      emit(current.copyWith(data: updatedData));
-    } else if (state is FitnessEmpty) {
-      // Re-initialize success state with newly added item
-      loadData().then((_) {
-        addWorkoutProgram(newProgram);
-      });
     }
   }
 }
