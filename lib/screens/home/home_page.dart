@@ -17,10 +17,25 @@ import 'widgets/workout_programs_section.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  void _navigateToDetails(BuildContext context) {
+  void _navigateToDetails(
+    BuildContext context, {
+    String? title,
+    String? imageUrl,
+    String? subtitle,
+    String? description,
+    double? price,
+  }) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const GymDetailsPage()),
+      MaterialPageRoute(
+        builder: (_) => GymDetailsPage(
+          title: title,
+          imageUrl: imageUrl,
+          subtitle: subtitle,
+          description: description,
+          price: price,
+        ),
+      ),
     );
   }
 
@@ -160,7 +175,15 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 15),
                       FeaturedPlansSection(
                         plans: data.featuredPlans,
-                        onPlanTap: (_) => _navigateToDetails(context),
+                        onPlanTap: (plan) => _navigateToDetails(
+                          context,
+                          title: plan.title,
+                          imageUrl: plan.imageUrl,
+                          subtitle: '${plan.duration} • ${plan.frequency}',
+                          description:
+                              'Featured training plan for ${plan.title}. Comprehensive step-by-step guidance.',
+                          price: 49.00,
+                        ),
                       ),
                       const SizedBox(height: 27),
                       Row(
@@ -217,7 +240,15 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 16),
                       WorkoutProgramsSection(
                         programs: filteredPrograms,
-                        onProgramTap: (_) => _navigateToDetails(context),
+                        onProgramTap: (program) => _navigateToDetails(
+                          context,
+                          title: program.title,
+                          imageUrl: program.imageUrl,
+                          subtitle: '${program.calories} kcal • ${program.durationMinutes} min',
+                          description:
+                              'Workout program for ${program.title}. Suitable for all fitness levels.',
+                          price: 29.00,
+                        ),
                         onFavoriteToggle: (id) => cubit.toggleFavorite(id),
                       ),
                     ],

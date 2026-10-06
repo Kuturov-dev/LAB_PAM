@@ -10,7 +10,24 @@ import 'widgets/expandable_description.dart';
 import 'widgets/reserve_bottom_bar.dart';
 
 class GymDetailsPage extends StatelessWidget {
-  const GymDetailsPage({super.key});
+  final String? title;
+  final String? imageUrl;
+  final String? subtitle;
+  final String? description;
+  final double? price;
+  final String? pricePeriod;
+  final List<GymAmenity>? amenities;
+
+  const GymDetailsPage({
+    super.key,
+    this.title,
+    this.imageUrl,
+    this.subtitle,
+    this.description,
+    this.price,
+    this.pricePeriod,
+    this.amenities,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +77,14 @@ class GymDetailsPage extends StatelessWidget {
               );
             }
 
+            final displayTitle = title ?? gymDetails.name;
+            final displayImageUrl = imageUrl ?? gymDetails.heroImageUrl;
+            final displaySubtitle = subtitle ?? gymDetails.location;
+            final displayDescription = description ?? gymDetails.description;
+            final displayPrice = price ?? gymDetails.priceAmount;
+            final displayPricePeriod = pricePeriod ?? '/${gymDetails.pricePeriod}';
+            final displayAmenities = amenities ?? gymDetails.amenities;
+
             return Stack(
               children: [
                 SingleChildScrollView(
@@ -74,7 +99,7 @@ class GymDetailsPage extends StatelessWidget {
                           fit: StackFit.expand,
                           children: [
                             Image.network(
-                              gymDetails.heroImageUrl,
+                              displayImageUrl,
                               fit: BoxFit.cover,
                               alignment: Alignment.center,
                               errorBuilder: (_, __, ___) => Image.asset(
@@ -146,7 +171,7 @@ class GymDetailsPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              gymDetails.name,
+                              displayTitle,
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -155,13 +180,13 @@ class GymDetailsPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              gymDetails.location,
+                              displaySubtitle,
                               style: const TextStyle(fontSize: 14, color: kGrey),
                             ),
                             const SizedBox(height: 16),
                             const Divider(color: kLine, height: 1),
                             const SizedBox(height: 21),
-                            ExpandableDescription(text: gymDetails.description),
+                            ExpandableDescription(text: displayDescription),
                             const SizedBox(height: 20),
                             const Text(
                               'Amenities',
@@ -172,7 +197,7 @@ class GymDetailsPage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            AmenitiesGrid(amenities: gymDetails.amenities),
+                            AmenitiesGrid(amenities: displayAmenities),
                           ],
                         ),
                       ),
@@ -184,11 +209,11 @@ class GymDetailsPage extends StatelessWidget {
                   right: 0,
                   bottom: 0,
                   child: ReserveBottomBar(
-                    price: gymDetails.priceAmount,
-                    period: '/${gymDetails.pricePeriod}',
+                    price: displayPrice,
+                    period: displayPricePeriod,
                     onReserveTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Reservation requested!')),
+                        SnackBar(content: Text('Reserved $displayTitle!')),
                       );
                     },
                   ),

@@ -207,7 +207,15 @@ class AllProgramsPage extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => const GymDetailsPage()),
+                                  builder: (_) => GymDetailsPage(
+                                    title: program.title,
+                                    imageUrl: program.imageUrl,
+                                    subtitle: '${program.calories} kcal • ${program.durationMinutes} min',
+                                    description:
+                                        'Comprehensive workout program for ${program.title}. Includes step-by-step guidance and calorie tracking.',
+                                    price: 29.00,
+                                  ),
+                                ),
                               );
                             },
                             child: Container(
