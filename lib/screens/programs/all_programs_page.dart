@@ -62,6 +62,20 @@ class AllProgramsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildImage(String url) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(url, fit: BoxFit.cover);
+    }
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Image.asset(
+        'assets/images/yoga.jpg',
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<FitnessCubit>();
@@ -226,14 +240,7 @@ class AllProgramsPage extends StatelessWidget {
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  Image.network(
-                                    program.imageUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Image.asset(
-                                      'assets/images/yoga.jpg',
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
+                                  _buildImage(program.imageUrl),
                                   const DecoratedBox(
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(

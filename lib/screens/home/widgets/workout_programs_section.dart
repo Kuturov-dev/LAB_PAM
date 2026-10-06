@@ -48,6 +48,20 @@ class _ProgramCard extends StatelessWidget {
     required this.onFavoriteToggle,
   });
 
+  Widget _buildImage(String url) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(url, fit: BoxFit.cover);
+    }
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => Image.asset(
+        'assets/images/yoga.jpg',
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -59,14 +73,7 @@ class _ProgramCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              program.imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Image.asset(
-                'assets/images/yoga.jpg',
-                fit: BoxFit.cover,
-              ),
-            ),
+            _buildImage(program.imageUrl),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

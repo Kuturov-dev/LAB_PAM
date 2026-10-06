@@ -43,6 +43,21 @@ class _FeaturedCard extends StatelessWidget {
     required this.onTap,
   });
 
+  Widget _buildImage(String url) {
+    if (url.startsWith('assets/')) {
+      return Image.asset(url, fit: BoxFit.cover, alignment: Alignment.center);
+    }
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+      errorBuilder: (_, __, ___) => Image.asset(
+        'assets/images/upper_body.jpg',
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -54,15 +69,7 @@ class _FeaturedCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(
-              plan.imageUrl,
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
-              errorBuilder: (_, __, ___) => Image.asset(
-                'assets/images/upper_body.jpg',
-                fit: BoxFit.cover,
-              ),
-            ),
+            _buildImage(plan.imageUrl),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
