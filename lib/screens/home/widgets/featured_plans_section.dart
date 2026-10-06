@@ -21,7 +21,7 @@ class FeaturedPlansSection extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.only(right: 24),
         itemCount: plans.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        separatorBuilder: (_, _) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
           final plan = plans[index];
           return _FeaturedCard(
@@ -51,7 +51,7 @@ class _FeaturedCard extends StatelessWidget {
       url,
       fit: BoxFit.cover,
       alignment: Alignment.center,
-      errorBuilder: (_, __, ___) => Image.asset(
+      errorBuilder: (_, _, _) => Image.asset(
         'assets/images/upper_body.jpg',
         fit: BoxFit.cover,
       ),

@@ -102,7 +102,7 @@ class GymDetailsPage extends StatelessWidget {
                               displayImageUrl,
                               fit: BoxFit.cover,
                               alignment: Alignment.center,
-                              errorBuilder: (_, __, ___) => Image.asset(
+                              errorBuilder: (_, _, _) => Image.asset(
                                 'assets/images/gym.jpg',
                                 fit: BoxFit.cover,
                               ),

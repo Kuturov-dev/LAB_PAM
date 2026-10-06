@@ -23,7 +23,7 @@ class WorkoutProgramsSection extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.only(right: 24),
         itemCount: programs.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        separatorBuilder: (_, _) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
           final program = programs[index];
           return _ProgramCard(
@@ -55,7 +55,7 @@ class _ProgramCard extends StatelessWidget {
     return Image.network(
       url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Image.asset(
+      errorBuilder: (_, _, _) => Image.asset(
         'assets/images/yoga.jpg',
         fit: BoxFit.cover,
       ),

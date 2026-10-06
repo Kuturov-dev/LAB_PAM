@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import '../models/fitness_models.dart';
 
 enum SortOption { none, durationAsc, durationDesc, caloriesAsc, caloriesDesc }
